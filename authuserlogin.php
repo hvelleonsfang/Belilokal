@@ -338,7 +338,7 @@
                         <td style="width: 1px;"><button class="nav-btns">🔍</button></td>
                         <td style="width: 1px;"><button class="nav-btns" onclick="javascript:location.href='authuserlogin'">👤</button></td>
                         <td style="width: 1px;"><button class="nav-btns">♥</button></td>
-                        <td style="wdith: 1px;"><button class="nav-btns"></button></td>
+                        <td style="width: 1px;"><button class="nav-btns"></button></td>
                     </tr>
                 </table>
             </div>

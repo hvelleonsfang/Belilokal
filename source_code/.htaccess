@@ -1,0 +1,30 @@
+AllowOverride None
+
+# Remove HTML Extensions
+RewriteEngine on 
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^(.*)$ $1.html [NC,L]
+RewriteRule ^404\.html$ http://belilokal.com/404 [L,R,NS]
+
+# Remove PHP Extensions
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+RewriteRule ^authuser\.php$ http://belilokal.com/authuser [L,R,NS]
+RewriteRule ^authuserlogin\.php$ http://belilokal.com/authuserlogin [L,R,NS]
+RewriteRule ^index\.php$ http://belilokal.com/index [L,R,NS]
+RewriteRule ^syaratdanketentuan\.php$ http://belilokal.com/syaratandketentuan [L,R,NS]
+
+RewriteCond %{HTTP_HOST} !^www\.
+RewriteRule ^(.*)$ http://www.%{HTTP_HOST}/$1 [R=301,L]
+# DO NOT REMOVE THIS LINE AND THE LINES BELOW ERRORPAGEID:yPasyd
+ErrorDocument 404 /404.html
+# DO NOT REMOVE THIS LINE AND THE LINES ABOVE yPasyd:ERRORPAGEID
+
+
+# DO NOT REMOVE THIS LINE AND THE LINES BELLOW SSL_REDIRECT:belilokal.com
+RewriteEngine on
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} (www\.)?belilokal.com
+RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# DO NOT REMOVE THIS LINE AND THE LINES BELLOW SSL_REDIRECT:belilokal.com

@@ -1,3 +1,144 @@
+<?php
+
+function generateRandomString($length = 4) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $randomString;
+}
+
+function createId(){
+    $rndStr = generateRandomString(7);
+    $new_id = "B".$rndStr;
+    return $new_id;
+}
+
+function checker($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
+include("../static/database.php");
+$db = new Database();
+
+clearstatcache();
+
+$firstError = $emailError = $passwdError = $confpwError = $phoneError = null;
+$userId = $first = $last = $email = $pw = $confpw = $address = $phone = $temp_phone = $date_of_birth = $gender = null;
+$able_submit = true;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST["saveButton"])) {
+        
+        #region Primary Checker
+        
+        // Check First Name
+        if (empty($_POST["fname"])) {
+            $firstError = "Must not empty";
+            $able_submit = false;
+        } else {
+            $first = checker($_POST["fname"]);
+        }
+        
+        // Check Last Name
+        if (empty($_POST["lname"])) {
+            $last = "";
+        } else {
+            $last = checker($_POST["lname"]);
+        }
+        
+        // Check Email Field
+        if (empty($_POST["email"])) {
+            $emailError = "Require email to login your account";
+            $able_submit = false;
+        } else {
+            $temp_email = checker($_POST["email"]);
+            if (!filter_var($temp_email, FILTER_VALIDATE_EMAIL)) {
+                $emailError = "Invalid email format";
+                $able_submit = false;
+            } else {
+                $email = $temp_email;
+            }
+        }
+        
+        // Check Password
+        if (empty($_POST["password"])) {
+            $passwdError = "Password needed.";
+        } else {
+            $pw = checker($_POST["password"]);
+            
+            // Check Confirmation Password
+            if (empty($_POST["confirmedPassword"])) {
+                $confpwError = "Confirmation needed";
+            } else if ($pw != $_POST["confirmedPassword"]) {
+                $confpwError = "Password not match";
+                $able_submit = false;
+            } else {
+                $confpw = hash("sha256", hash("md5", $pw));
+            }
+        }
+        
+        // Check Address
+        $address = checker($_POST["address"]);
+        
+        // Check Phone Number
+        if (empty($_POST["phoneNumber"])) {
+            $phoneError = "Invalid phone number";
+            $able_submit = false;
+        } else {
+            $temp_phone = checker($_POST["phoneNumber"]);
+            if (preg_match("/^0/", $temp_phone)) {
+                $temp_phone = substr($temp_phone, 1);
+            }
+            $phone = $_POST["phone"].$temp_phone;
+        }
+        
+        // Insert Birth Date
+        $date_of_birth = $_POST["day"]."-".$_POST["month"]."-".$_POST["year"];
+        
+        // Insert Gender
+        $gender = $_POST["gender"];
+        
+        #endregion
+        
+        #region Secondary Checker
+        
+        // Create ID and Check if Exist
+        $userId = createId();
+        while (true) {
+            $alreadyIn = $db -> get("SELECT uid FROM user WHERE uid = '$userId';");
+            if (!$alreadyIn) {
+                break;
+            } else {
+                $userId = createId();
+            }
+        }
+        
+        // Check if Email already exist
+        $emailExist = $db -> get("SELECT email FROM user WHERE email = '$email'");
+        if ($emailExist) {
+            $emailError = "Email already used";
+            $able_submit = false;
+        }
+        
+        #endregion
+        
+        // Submission
+        if ($able_submit){
+            $sql = "INSERT INTO user VALUES ('$userId', '$confpw', '$first', '$last', null, STR_TO_DATE('$date_of_birth', '%d-%m-%Y'), $gender, $phone, '$email', FALSE, '$address');";
+            $db -> execute($sql);
+            setcookie('REGISTERED', "Successfully registered, now you can login.", time() + 3600, "../belilokal.com/");
+            echo '<script>window.location = "http://www.belilokal.com/authuserlogin" </script>';
+        }
+    }
+}
+
+?>
 <html>
     <head>
         <title>Belilokal</title>
@@ -262,148 +403,6 @@
         <script src="authuser.js"></script>
     </head>
     <body>
-    <?php
-    
-    function generateRandomString($length = 4) {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $charactersLength = strlen($characters);
-        $randomString = '';
-        for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
-        }
-        return $randomString;
-    }
-    
-    function createId(){
-        $rndStr = generateRandomString(7);
-        $new_id = "B".$rndStr;
-        return $new_id;
-    }
-
-    function checker($data) {
-        $data = trim($data);
-        $data = stripslashes($data);
-        $data = htmlspecialchars($data);
-        return $data;
-    }
-    
-    include("../static/database.php");
-    $db = new Database();
-    
-    clearstatcache();
-    
-    $firstError = $emailError = $passwdError = $confpwError = $phoneError = null;
-    $userId = $first = $last = $email = $pw = $confpw = $address = $phone = $temp_phone = $date_of_birth = $gender = null;
-    $able_submit = true;
-    
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        if (isset($_POST["saveButton"])) {
-            
-            #region Primary Checker
-            
-            // Check First Name
-            if (empty($_POST["fname"])) {
-                $firstError = "Must not empty";
-                $able_submit = false;
-            } else {
-                $first = checker($_POST["fname"]);
-            }
-            
-            // Check Last Name
-            if (empty($_POST["lname"])) {
-                $last = "";
-            } else {
-                $last = checker($_POST["lname"]);
-            }
-            
-            // Check Email Field
-            if (empty($_POST["email"])) {
-                $emailError = "Require email to login your account";
-                $able_submit = false;
-            } else {
-                $temp_email = checker($_POST["email"]);
-                if (!filter_var($temp_email, FILTER_VALIDATE_EMAIL)) {
-                    $emailError = "Invalid email format";
-                    $able_submit = false;
-                } else {
-                    $email = $temp_email;
-                }
-            }
-            
-            // Check Password
-            if (empty($_POST["password"])) {
-                $passwdError = "Password needed.";
-            } else {
-                $pw = checker($_POST["password"]);
-                
-                // Check Confirmation Password
-                if (empty($_POST["confirmedPassword"])) {
-                    $confpwError = "Confirmation needed";
-                } else if ($pw != $_POST["confirmedPassword"]) {
-                    $confpwError = "Password not match";
-                    $able_submit = false;
-                } else {
-                    $confpw = hash("sha256", hash("md5", $pw));
-                }
-            }
-            
-            // Check Address
-            $address = checker($_POST["address"]);
-            
-            // Check Phone Number
-            if (empty($_POST["phoneNumber"])) {
-                $phoneError = "Invalid phone number";
-                $able_submit = false;
-            } else {
-                $temp_phone = checker($_POST["phoneNumber"]);
-                if (preg_match("/^0/", $temp_phone)) {
-                    $temp_phone = substr($temp_phone, 1);
-                }
-                $phone = $_POST["phone"].$temp_phone;
-            }
-            
-            // Insert Birth Date
-            $date_of_birth = $_POST["day"]."-".$_POST["month"]."-".$_POST["year"];
-            
-            // Insert Gender
-            $gender = $_POST["gender"];
-            
-            #endregion
-            
-            #region Secondary Checker
-            
-            // Create ID and Check if Exist
-            $userId = createId();
-            while (true) {
-                $alreadyIn = $db -> get("SELECT uid FROM user WHERE uid = '$userId';");
-                if (!$alreadyIn) {
-                    break;
-                } else {
-                    $userId = createId();
-                }
-            }
-            
-            // Check if Email already exist
-            $emailExist = $db -> get("SELECT email FROM user WHERE email = '$email'");
-            if ($emailExist) {
-                $emailError = "Email already used";
-                $able_submit = false;
-            }
-            
-            #endregion
-            
-            // Submission
-            if ($able_submit){
-                $sql = "INSERT INTO user VALUES ('$userId', '$confpw', '$first', '$last', null, STR_TO_DATE('$date_of_birth', '%d-%m-%Y'), $gender, $phone, '$email', FALSE, '$address');";
-                $db -> execute($sql);
-                setcookie('registered', "Successfully registered, now you can login.", time() + 5);
-
-                echo '<script>window.location = "http://www.belilokal.com/authuserlogin" </script>';
-            }
-        }
-    }
-    
-    ?>
     <div class="uppermost">
         <br/>
             <div id="desktop">
@@ -414,7 +413,7 @@
                         <td style="width: 1px;"><button class="nav-btns">🔍</button></td>
                         <td style="width: 1px;"><button class="nav-btns" onclick="javascript:location.href='authuserlogin'">👤</button></td>
                         <td style="width: 1px;"><button class="nav-btns">♥</button></td>
-                        <td style="wdith: 1px;"><button class="nav-btns"></button></td>
+                        <td style="width: 1px;"><button class="nav-btns"></button></td>
                     </tr>
                 </table>
             </div>

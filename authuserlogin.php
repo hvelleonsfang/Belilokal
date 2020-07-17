@@ -1,3 +1,80 @@
+<?php 
+function checker($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
+include("../static/database.php");
+$db = new Database();
+
+$emailError = $pwError = $existError = null;
+$email = $pw = null;
+$logged_in = true;
+
+$successRegister = null;
+if (isset($_COOKIE["registered"])) {
+    $successRegister = $_COOKIE["registered"];
+}
+
+// Unset Cookie REGISTERED from register success
+setcookie('REGISTERED', "", 0, "../belilokal.com/");
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST["saveButton"])) {
+        
+        # region Primary Check
+        
+        if (empty($_POST["email"])) {
+            $emailError = "Field cannot empty";
+            $logged_in = false;
+        } else {
+            $temp_email = checker($_POST["email"]);
+            if (!filter_var($temp_email, FILTER_VALIDATE_EMAIL)) {
+                $emailError = "Invalid email format";
+                $logged_in = false;
+            } else {
+                $email = $temp_email;
+            }
+        }
+        
+        if (empty($_POST["password"])) {
+            $pwError = "Password needed";
+            $logged_in = false;
+        } else {
+            $pw = checker($_POST["password"]);
+        }
+        
+        #endregion
+        
+        #region Secondary Check
+        
+        $loadData = $db -> get("SELECT * FROM user WHERE email = '$email'");
+        if (!$loadData) {
+            $existError = "Invalid email/password, please try again.";
+            $logged_in = false;
+        } else {
+            $conf = hash("sha256", hash("md5", $pw));
+            if ($conf != $loadData["password"]) {
+                $existError = "Invalid email/password, please try again.";
+                $logged_in = false;
+            } else {
+                setcookie('USER_EMAIL', $loadData["email"], time() + (86400 * 30), "../belilokal.com/");
+            }
+        }
+        
+        #endregion
+        
+        if ($logged_in) {
+            setcookie('USER_ID', $loadData["uid"], time() + (86400 * 30), "../belilokal.com/");
+            setcookie('LOGGED_IN', true, time() + (86400 * 30), "../belilokal.com/");
+            echo '<script>window.location = "http://www.belilokal.com/" </script>';
+        }
+    }
+}
+
+?>
 <!DOCTYPE html>
 <html>
     <head>
@@ -253,79 +330,6 @@
             }
         </style>
         <script src="translator.js"></script>
-        <?php 
-        function checker($data) {
-            $data = trim($data);
-            $data = stripslashes($data);
-            $data = htmlspecialchars($data);
-            return $data;
-        }
-        
-        include("../static/database.php");
-        $db = new Database();
-        
-        $emailError = $pwError = $existError = null;
-        $email = $pw = null;
-        $logged_in = true;
-        
-        $successRegister = null;
-        if (isset($_COOKIE["registered"])) {
-            $successRegister = $_COOKIE["registered"];
-        }
-        
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            if (isset($_POST["saveButton"])) {
-                
-                # region Primary Check
-                
-                if (empty($_POST["email"])) {
-                    $emailError = "Field cannot empty";
-                    $logged_in = false;
-                } else {
-                    $temp_email = checker($_POST["email"]);
-                    if (!filter_var($temp_email, FILTER_VALIDATE_EMAIL)) {
-                        $emailError = "Invalid email format";
-                        $logged_in = false;
-                    } else {
-                        $email = $temp_email;
-                        setcookie('USER_EMAIL', $email, time() + (86400 * 30));
-                    }
-                }
-                
-                if (empty($_POST["password"])) {
-                    $pwError = "Password needed";
-                    $logged_in = false;
-                } else {
-                    $pw = checker($_POST["password"]);
-                }
-                
-                #endregion
-                
-                #region Secondary Check
-                
-                $loadData = $db -> get("SELECT * FROM user WHERE email = '$email'");
-                if (!$loadData) {
-                    $existError = "Invalid email/password, please try again.";
-                    $logged_in = false;
-                } else {
-                    $conf = hash("sha256", hash("md5", $pw));
-                    if ($conf != $loadData["password"]) {
-                        $existError = "Invalid email/password, please try again.";
-                        $logged_in = false;
-                    }
-                }
-                
-                #endregion
-                
-                if ($logged_in) {
-                    setcookie('USER_ID', $loadData["uid"], time() + (86400 * 30));
-                    setcookie('LOGGED_IN', true, time() + (86400 * 30));
-                    echo '<script>window.location = "http://www.belilokal.com/" </script>';
-                }
-            }
-        }
-        
-        ?>
     </head>
     <body>
         <div class="uppermost">
@@ -383,7 +387,10 @@
                     <tr>
                         <td>
 	                        <!-- E-Mail -->
-	                        <div><input type="email" id="email" name="email" size="30" placeholder="E-Mail" value="<?php if ($_COOKIE['USER_EMAIL']) echo $_COOKIE['USER_EMAIL']; ?>" required></div>
+                            <div><input type="email" id="email" name="email" size="30" placeholder="E-Mail" value="<?php 
+                                if ($_COOKIE['USER_EMAIL']) 
+                                    echo $_COOKIE['USER_EMAIL']; 
+                                ?>" required></div>
 	                        <!-- Passwords -->
 	                        <div><br><?php echo $emailError;?>
 	                            <input type="password" id="pasuwarudo" name="password" size="30" placeholder="Password" required>

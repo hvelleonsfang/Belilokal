@@ -145,11 +145,6 @@
             }
         </style>
         <script src="translator.js"></script>
-        <?php
-        
-        
-        
-        ?>
     </head>
     <body>
         <div class="uppermost">
@@ -162,7 +157,7 @@
                         <td style="width: 1px;"><button class="nav-btns">🔍</button></td>
                         <td style="width: 1px;"><button class="nav-btns" onclick="javascript:location.href='authuserlogin'">👤</button></td>
                         <td style="width: 1px;"><button class="nav-btns">♥</button></td>
-                        <td style="wdith: 1px;"><button class="nav-btns"></button></td>
+                        <td style="width: 1px;"><button class="nav-btns"></button></td>
                     </tr>
                 </table>
             </div>

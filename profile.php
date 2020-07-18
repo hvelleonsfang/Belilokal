@@ -1,3 +1,15 @@
+<?php
+include("../static/database.php");
+$db = new Database();
+
+// Get Filename
+$this_url = "//{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
+$filename = pathinfo($this_url)["filename"];
+
+// Load Data
+$rowData = $db -> get_row(sprintf("SELECT * FROM user WHERE uid='%s'", $filename));
+?>
+<!DOCTYPE html>
 <html>
     <head>
         <title>Belilokal</title>
@@ -194,13 +206,19 @@
         </div>
         <br/>
         <div class="profileContent">
-            <p><img src="Images/user.png" width="64px"><b> John Smith</b> | X Years Old | Male<br><b>Home Address :</b> 56, San Andreas.</p>
-            <p><button>Change Email</button></p>
-            <p><button>Change Password</button></p>
-            <p><button>Change Phone Number</button></p>
-            <p><button>Hide Address</button></p>
-            <p><button>Hide Email</button></p>
-            <p><button>Hide Phone Number</button></p>
+            <p><img src="Images/user.png" width="64px"><b> <?php echo "{$rowData[2]} {$rowData[3]}"; ?></b> | X Years Old | Male<br><b>Home Address :</b> 56, San Andreas.</p><?php
+                // Edit Permission
+                if ($_COOKIE["USER_ID"]) {
+                    if ($filename == $_COOKIE["USER_ID"]) {
+                        echo "<p><button>Change Email</button></p>
+                        <p><button>Change Password</button></p>
+                        <p><button>Change Phone Number</button></p>
+                        <p><button>Hide Address</button></p>
+                        <p><button>Hide Email</button></p>
+                        <p><button>Hide Phone Number</button></p>";
+                    }
+                }
+            ?>
         </div>
     </body>
 </html>

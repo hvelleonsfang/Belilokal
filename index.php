@@ -1,5 +1,9 @@
 <?php
-
+if ($_COOKIE["LOGGED_IN"] && $_COOKIE["USER_ID"]) {
+    if (!file_exists(sprintf("Profiles/%s.php", $_COOKIE["USER_ID"]))) {
+        copy("profile.php", sprintf("%s.php", $_COOKIE["USER_ID"]));
+    }
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -7,6 +11,7 @@
         <title>Belilokal</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <link rel="stylesheet" type="text/css" href="sy-styles.css"/>
         <link rel="icon" href="Images/favicon.PNG">
         <style>
@@ -155,7 +160,13 @@
                         <td style="width: 1px;padding-left: 130px;"><a href="index"><img src="Images/logoreal.png" width="200px" height="40px"></a></td>
                         <td style="width: 1px;padding-left: 670px;"><button class="nav-btns" onclick="javascript:indexTranslator()"></button></td>
                         <td style="width: 1px;"><button class="nav-btns">🔍</button></td>
-                        <td style="width: 1px;"><button class="nav-btns" onclick="javascript:location.href='authuserlogin'">👤</button></td>
+                        <td style="width: 1px;"><button class="nav-btns" onclick=<?php
+                        if ($_COOKIE["LOGGED_IN"] && $_COOKIE["USER_ID"]) {
+                            // Change Login Link into Profile Detail Link
+                            echo sprintf("javascript:location.href='Profiles/%s'", $_COOKIE["USER_ID"]);
+                        } else {
+                            echo "javascript:location.href='authuserlogin'";
+                        } ?> >👤</button></td>
                         <td style="width: 1px;"><button class="nav-btns">♥</button></td>
                         <td style="width: 1px;"><button class="nav-btns"></button></td>
                     </tr>
